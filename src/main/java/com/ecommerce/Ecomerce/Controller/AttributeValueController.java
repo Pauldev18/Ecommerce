@@ -1,5 +1,6 @@
 package com.ecommerce.Ecomerce.Controller;
 
+import com.ecommerce.Ecomerce.Dto.AttributeValueDTO;
 import com.ecommerce.Ecomerce.Entity.AttributeValue;
 import com.ecommerce.Ecomerce.Service.AttributeValueService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/api/attribute-values")
@@ -16,23 +19,31 @@ public class AttributeValueController {
     private AttributeValueService attributeValueService;
 
     @GetMapping
-    public List<AttributeValue> getAll() {
-        return attributeValueService.getAll();
+    public List<AttributeValueDTO> getAll() {
+        List<AttributeValue> list = attributeValueService.getAll();
+        return list.stream()
+                .map(AttributeValueDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AttributeValue> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(attributeValueService.getById(id));
+    public ResponseEntity<AttributeValueDTO> getById(@PathVariable UUID id) {
+        AttributeValue entity = attributeValueService.getById(id);
+        return ResponseEntity.ok(AttributeValueDTO.fromEntity(entity));
     }
 
     @PostMapping
-    public ResponseEntity<AttributeValue> create(@RequestBody AttributeValue attributeValue) {
-        return ResponseEntity.ok(attributeValueService.create(attributeValue));
+    public ResponseEntity<AttributeValueDTO> create(@RequestBody AttributeValue attributeValue) {
+        AttributeValue created = attributeValueService.create(attributeValue);
+        return ResponseEntity.ok(AttributeValueDTO.fromEntity(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AttributeValue> update(@PathVariable UUID id, @RequestBody AttributeValue attributeValue) {
-        return ResponseEntity.ok(attributeValueService.update(id, attributeValue));
+    public ResponseEntity<AttributeValueDTO> update(
+            @PathVariable UUID id,
+            @RequestBody AttributeValue attributeValue) {
+        AttributeValue updated = attributeValueService.update(id, attributeValue);
+        return ResponseEntity.ok(AttributeValueDTO.fromEntity(updated));
     }
 
     @DeleteMapping("/{id}")
