@@ -12,6 +12,9 @@ import com.ecommerce.Ecomerce.Repository.CardRepository;
 import com.ecommerce.Ecomerce.Repository.CustomerRepository;
 import com.ecommerce.Ecomerce.Repository.ProductRepository;
 import com.ecommerce.Ecomerce.Service.CardService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,7 +33,8 @@ public class CardServiceImpl implements CardService {
     @Autowired
     private  ProductRepository productRepository;
 
-
+    @Autowired
+    private EntityManager entityManager;
 
     private CartResponseDTO mapToDTO(Card cart) {
         List<CartItemDTO> items = cart.getItems().stream()
@@ -58,31 +62,62 @@ public class CardServiceImpl implements CardService {
         return mapToDTO(cart);
     }
 
+
     @Override
     @Transactional
     public CartResponseDTO addItem(UUID customerId, CartItemRequestDTO request) {
-        Card cart = getOrCreateCart(customerId);
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid customer ID"));
+
+        TypedQuery<Card> q = entityManager.createQuery(
+                "SELECT c FROM Card c WHERE c.customer.id = :cid", Card.class);
+        q.setParameter("cid", customerId);
+        q.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        List<Card> list = q.getResultList();
+
+        Card cart;
+        if (list.isEmpty()) {
+            cart = new Card();
+            cart.setCustomer(customer);
+            cart.setItems(new ArrayList<>());
+            cart = entityManager.merge(cart);
+            entityManager.flush();
+        } else {
+            cart = list.get(0);
+            entityManager.refresh(cart);
+        }
+
+
         UUID prodId = UUID.fromString(request.getProductId());
         Product product = productRepository.findById(prodId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product ID"));
-        // check existing
+
         Optional<CardItem> existing = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(prodId))
                 .findFirst();
+
         if (existing.isPresent()) {
-            CardItem item = existing.get();
+             CardItem item = existing.get();
             item.setQuantity(item.getQuantity() + request.getQuantity());
-            itemRepository.save(item);
+            entityManager.merge(item);
         } else {
+
             CardItem item = new CardItem();
             item.setCard(cart);
             item.setProduct(product);
             item.setQuantity(request.getQuantity());
-            itemRepository.save(item);
+            entityManager.merge(item);
             cart.getItems().add(item);
         }
+
+
+        entityManager.flush();
         return mapToDTO(cart);
     }
+
+
+
 
     @Override
     @Transactional
