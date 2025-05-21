@@ -3,6 +3,7 @@ package com.ecommerce.Ecomerce.Dto;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 @Data
 public class ProductDTO {
@@ -19,10 +20,11 @@ public class ProductDTO {
     private boolean published;
     private boolean disableOutOfStock;
     private String note;
-    private UUID createdBy;   // chỉ lưu tên hoặc ID tài khoản
+    private UUID createdBy;
     private UUID updatedBy;
     private Date createdAt;
     private Date updatedAt;
+    private List<ProductAttributeDTO> productAttributes;
+    private List<ProductGalleryDTO> galleries;
 
-    // getters & setters
 }

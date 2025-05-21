@@ -1,6 +1,9 @@
 package com.ecommerce.Ecomerce.Controller;
 
+import com.ecommerce.Ecomerce.Dto.ProductAttributeDTO;
+import com.ecommerce.Ecomerce.Dto.ProductAttributeDTO2;
 import com.ecommerce.Ecomerce.Dto.ProductDTO;
+import com.ecommerce.Ecomerce.Dto.ProductGalleryDTO;
 import com.ecommerce.Ecomerce.Entity.Product;
 import com.ecommerce.Ecomerce.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +37,27 @@ public class ProductController {
         dto.setNote(p.getNote());
         dto.setCreatedAt(p.getCreatedAt());
         dto.setUpdatedAt(p.getUpdatedAt());
-        // tránh lazy proxy: chỉ lấy một trường đơn giản từ StaffAccount
         dto.setCreatedBy(p.getCreatedBy() != null ? p.getCreatedBy().getId() : null);
         dto.setUpdatedBy(p.getUpdatedBy() != null ? p.getUpdatedBy().getId() : null);
+
+
+        dto.setProductAttributes(
+                p.getProductAttributes() != null
+                        ? p.getProductAttributes().stream()
+                        .map(ProductAttributeDTO::fromEntity)
+                        .collect(Collectors.toList())
+                        : Collections.emptyList()
+        );
+
+
+        dto.setGalleries(
+                p.getGalleries() != null
+                        ? p.getGalleries().stream()
+                        .map(ProductGalleryDTO::fromEntity)
+                        .collect(Collectors.toList())
+                        : Collections.emptyList()
+        );
+
         return dto;
     }
     @GetMapping
@@ -47,8 +68,8 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productService.getProductById(id));
+    public ResponseEntity<ProductDTO> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ProductController.toDTO(productService.getProductById(id)));
     }
 
     @PostMapping
