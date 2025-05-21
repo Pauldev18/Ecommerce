@@ -66,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponseDTO> findByCustomerId(String customerId) {
+    public List<OrderResponseDTO> findByCustomerId(UUID customerId) {
         return orderRepository.findByCustomerId(customerId).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());

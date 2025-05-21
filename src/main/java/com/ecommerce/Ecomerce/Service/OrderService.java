@@ -6,10 +6,11 @@ import com.ecommerce.Ecomerce.Entity.Order;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public interface OrderService {
     List<OrderResponseDTO> findAll();
-    List<OrderResponseDTO> findByCustomerId(String customerId);
+    List<OrderResponseDTO> findByCustomerId(UUID customerId);
     OrderResponseDTO findById(String id);
     OrderResponseDTO createOrder(OrderRequestDTO request);
     OrderResponseDTO updateOrder(String id, OrderRequestDTO request);

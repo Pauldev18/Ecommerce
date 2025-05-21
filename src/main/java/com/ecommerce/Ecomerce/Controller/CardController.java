@@ -1,5 +1,7 @@
 package com.ecommerce.Ecomerce.Controller;
 
+import com.ecommerce.Ecomerce.Dto.CartItemRequestDTO;
+import com.ecommerce.Ecomerce.Dto.CartResponseDTO;
 import com.ecommerce.Ecomerce.Entity.Card;
 import com.ecommerce.Ecomerce.Service.CardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,31 +15,32 @@ import java.util.*;
 public class CardController {
 
     @Autowired
-    private CardService cardService;
+    private CardService cartService;
 
-    @GetMapping
-    public List<Card> getAll() {
-        return cardService.getAll();
+    @GetMapping("/{customerId}")
+    public ResponseEntity<CartResponseDTO> getCart(@PathVariable UUID customerId) {
+        CartResponseDTO cart = cartService.getCartByCustomer(customerId);
+        return ResponseEntity.ok(cart);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Card> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(cardService.getById(id));
+    @PostMapping("/{customerId}/items")
+    public ResponseEntity<CartResponseDTO> addItem(@PathVariable UUID customerId,
+                                                   @RequestBody CartItemRequestDTO request) {
+        CartResponseDTO updated = cartService.addItem(customerId, request);
+        return ResponseEntity.ok(updated);
     }
 
-    @PostMapping
-    public ResponseEntity<Card> create(@RequestBody Card card) {
-        return ResponseEntity.ok(cardService.create(card));
+    @PutMapping("/{customerId}/items")
+    public ResponseEntity<CartResponseDTO> updateItem(@PathVariable UUID customerId,
+                                                      @RequestBody CartItemRequestDTO request) {
+        CartResponseDTO updated = cartService.updateItem(customerId, request);
+        return ResponseEntity.ok(updated);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Card> update(@PathVariable UUID id, @RequestBody Card card) {
-        return ResponseEntity.ok(cardService.update(id, card));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        cardService.delete(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{customerId}/items/{productId}")
+    public ResponseEntity<CartResponseDTO> removeItem(@PathVariable UUID customerId,
+                                                      @PathVariable UUID productId) {
+        CartResponseDTO updated = cartService.removeItem(customerId, productId);
+        return ResponseEntity.ok(updated);
     }
 }

@@ -15,11 +15,9 @@ import java.util.*;
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+    @Autowired
+    private  OrderService orderService;
 
     @GetMapping
     public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
@@ -28,7 +26,7 @@ public class OrderController {
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderResponseDTO>> getOrdersByCustomer(@PathVariable String customerId) {
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByCustomer(@PathVariable UUID customerId) {
         List<OrderResponseDTO> orders = orderService.findByCustomerId(customerId);
         return ResponseEntity.ok(orders);
     }
