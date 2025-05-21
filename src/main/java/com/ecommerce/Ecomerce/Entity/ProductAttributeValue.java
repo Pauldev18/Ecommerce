@@ -20,4 +20,6 @@ public class ProductAttributeValue {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attribute_value_id", nullable = false)
     private AttributeValue attributeValue;
+
+
 }

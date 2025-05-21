@@ -17,8 +17,6 @@ public class ProductAttributeDTO {
     private String attributeName;
     private List<AttributeValueDTO> attributeValues;
 
-    public ProductAttributeDTO() {}
-
     public ProductAttributeDTO(UUID id, UUID productId, String productName,
                                UUID attributeId, String attributeName,
                                List<AttributeValueDTO> attributeValues) {
@@ -41,6 +39,7 @@ public class ProductAttributeDTO {
                 .map(pav -> AttributeValueDTO.fromEntity(pav.getAttributeValue()))
                 .collect(Collectors.toList())
                 : Collections.emptyList();
+
 
         return new ProductAttributeDTO(
                 entity.getId(), prodId, prodName,
