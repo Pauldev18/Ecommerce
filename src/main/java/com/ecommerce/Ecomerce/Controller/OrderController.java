@@ -1,43 +1,61 @@
 package com.ecommerce.Ecomerce.Controller;
 
+import com.ecommerce.Ecomerce.Dto.OrderRequestDTO;
+import com.ecommerce.Ecomerce.Dto.OrderResponseDTO;
 import com.ecommerce.Ecomerce.Entity.Order;
 import com.ecommerce.Ecomerce.Service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.*;
 @CrossOrigin
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @GetMapping
-    public List<Order> getAll() {
-        return orderService.getAll();
+    public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
+        List<OrderResponseDTO> orders = orderService.findAll();
+        return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByCustomer(@PathVariable String customerId) {
+        List<OrderResponseDTO> orders = orderService.findByCustomerId(customerId);
+        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getById(@PathVariable String id) {
-        return ResponseEntity.ok(orderService.getById(id));
+    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable String id) {
+        OrderResponseDTO order = orderService.findById(id);
+        return ResponseEntity.ok(order);
     }
 
     @PostMapping
-    public ResponseEntity<Order> create(@RequestBody Order order) {
-        return ResponseEntity.ok(orderService.create(order));
+    public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody OrderRequestDTO request) {
+        OrderResponseDTO created = orderService.createOrder(request);
+        return ResponseEntity.created(URI.create("/api/orders/" + created.getId()))
+                .body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Order> update(@PathVariable String id, @RequestBody Order order) {
-        return ResponseEntity.ok(orderService.update(id, order));
+    public ResponseEntity<OrderResponseDTO> updateOrder(@PathVariable String id,
+                                                        @RequestBody OrderRequestDTO request) {
+        OrderResponseDTO updated = orderService.updateOrder(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        orderService.delete(id);
+    public ResponseEntity<Void> deleteOrder(@PathVariable String id) {
+        orderService.deleteOrder(id);
         return ResponseEntity.noContent().build();
     }
 }

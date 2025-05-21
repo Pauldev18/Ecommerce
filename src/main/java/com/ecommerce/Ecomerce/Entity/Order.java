@@ -26,7 +26,8 @@ public class Order {
     private Date orderApprovedAt;
     private Date orderDeliveredCarrierDate;
     private Date orderDeliveredCustomerDate;
-
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItems = new ArrayList<>();
     @Column(nullable = false)
     private Date createdAt = new Date();
 }
