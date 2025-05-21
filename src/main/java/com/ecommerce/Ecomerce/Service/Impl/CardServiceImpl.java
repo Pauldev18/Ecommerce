@@ -1,8 +1,6 @@
 package com.ecommerce.Ecomerce.Service.Impl;
 
-import com.ecommerce.Ecomerce.Dto.CartItemDTO;
-import com.ecommerce.Ecomerce.Dto.CartItemRequestDTO;
-import com.ecommerce.Ecomerce.Dto.CartResponseDTO;
+import com.ecommerce.Ecomerce.Dto.*;
 import com.ecommerce.Ecomerce.Entity.Card;
 import com.ecommerce.Ecomerce.Entity.CardItem;
 import com.ecommerce.Ecomerce.Entity.Customer;
@@ -37,17 +35,55 @@ public class CardServiceImpl implements CardService {
     private EntityManager entityManager;
 
     private CartResponseDTO mapToDTO(Card cart) {
-        List<CartItemDTO> items = cart.getItems().stream()
-                .map(i -> {
-                    CartItemDTO dto = new CartItemDTO();
-                    dto.setItemId(i.getId());
-                    dto.setProductId(i.getProduct().getId());
-                    dto.setQuantity(i.getQuantity());
-                    return dto;
-                })
-                .collect(Collectors.toList());
-        return new CartResponseDTO(cart.getId(), cart.getCustomer().getId(), items);
+        List<CartItemDTO> itemDTOs = cart.getItems().stream().map(i -> {
+            Product p = i.getProduct();
+
+            // Map gallery
+            List<ProductGalleryDTO> gallery = p.getGalleries().stream().map(g -> {
+                ProductGalleryDTO gd = new ProductGalleryDTO();
+                gd.setId(g.getId());
+                gd.setImage(g.getImage());
+                gd.setThumbnail(g.isThumbnail());
+                return gd;
+            }).collect(Collectors.toList());
+
+            // Map attributes + values
+            List<ProductAttributeDTO2> attrs = p.getProductAttributes().stream().map(pa -> {
+                ProductAttributeDTO2 pad = new ProductAttributeDTO2();
+                pad.setId(pa.getId());
+                pad.setName(pa.getAttribute().getName());
+
+                List<AttributeValueDTO> values = pa.getValues().stream().map(v -> {
+                    AttributeValueDTO av = new AttributeValueDTO();
+                    av.setId(v.getId());
+                    av.setValue(v.getAttributeValue().getValue());
+                    return av;
+                }).collect(Collectors.toList());
+
+                pad.setValues(values);
+                return pad;
+            }).collect(Collectors.toList());
+
+            // Xây DTO chính
+            CartItemDTO dto = new CartItemDTO();
+            dto.setItemId(i.getId());
+            dto.setProductId(p.getId());
+            dto.setProductName(p.getName());
+            dto.setUnitPrice(p.getSalePrice());
+            dto.setQuantity(i.getQuantity());
+            dto.setAttributes(attrs);
+            dto.setGallery(gallery);
+
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new CartResponseDTO(
+                cart.getId(),
+                cart.getCustomer().getId(),
+                itemDTOs
+        );
     }
+
 
     private Card getOrCreateCart(UUID customerId) {
         Customer customer = customerRepository.findById(customerId)

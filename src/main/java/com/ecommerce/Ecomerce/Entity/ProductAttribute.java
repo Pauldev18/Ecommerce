@@ -20,4 +20,6 @@ public class ProductAttribute {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attribute_id", nullable = false)
     private Attribute attribute;
+    @OneToMany(mappedBy = "productAttribute", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductAttributeValue> values = new ArrayList<>();
 }

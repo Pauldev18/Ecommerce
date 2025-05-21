@@ -66,4 +66,11 @@ public class Product {
     @JoinColumn(name = "updated_by", insertable = false, updatable = false)
     private StaffAccount updatedBy;
 
+    // Relationship to product attributes
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductAttribute> productAttributes = new ArrayList<>();
+
+    // Relationship to product gallery images
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductGallery> galleries = new ArrayList<>();
 }
