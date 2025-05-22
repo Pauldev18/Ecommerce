@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CustomerAddressService {
-    List<CustomerAddress> getAll();
-    CustomerAddress getById(UUID id);
-    CustomerAddress create(CustomerAddress address);
-    CustomerAddress update(UUID id, CustomerAddress address);
-    void delete(UUID id);
+    CustomerAddress getByCustomerId(UUID customerId);
+    CustomerAddress createOrUpdateAddress(CustomerAddress address);
 }

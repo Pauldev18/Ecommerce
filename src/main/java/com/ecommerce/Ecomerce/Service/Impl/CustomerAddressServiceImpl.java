@@ -15,37 +15,39 @@ public class CustomerAddressServiceImpl implements CustomerAddressService {
     private CustomerAddressRepository repository;
 
     @Override
-    public List<CustomerAddress> getAll() {
-        return repository.findAll();
+    public CustomerAddress getByCustomerId(UUID customerId) {
+        List<CustomerAddress> addresses = repository.findByCustomerId(customerId);
+        if (addresses.isEmpty()) {
+            return null;
+        }
+        return addresses.get(0);
     }
 
-    @Override
-    public CustomerAddress getById(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy CustomerAddress với ID: " + id));
-    }
 
     @Override
-    public CustomerAddress create(CustomerAddress address) {
-        return repository.save(address);
+    public CustomerAddress createOrUpdateAddress(CustomerAddress address) {
+        UUID customerId = address.getCustomer().getId();
+
+        // Tìm tất cả địa chỉ của customer
+        List<CustomerAddress> existingAddresses = repository.findByCustomerId(customerId);
+
+        if (!existingAddresses.isEmpty()) {
+
+            CustomerAddress existing = existingAddresses.get(0);
+
+            existing.setLine1(address.getLine1());
+            existing.setLine2(address.getLine2());
+            existing.setPhoneNumber(address.getPhoneNumber());
+            existing.setDialCode(address.getDialCode());
+            existing.setCountry(address.getCountry());
+            existing.setPostalCode(address.getPostalCode());
+            existing.setCity(address.getCity());
+
+            return repository.save(existing);
+        } else {
+            // Nếu customer chưa có địa chỉ, tạo mới
+            return repository.save(address);
+        }
     }
 
-    @Override
-    public CustomerAddress update(UUID id, CustomerAddress newAddress) {
-        CustomerAddress existing = getById(id);
-        existing.setCustomer(newAddress.getCustomer());
-        existing.setLine1(newAddress.getLine1());
-        existing.setLine2(newAddress.getLine2());
-        existing.setPhoneNumber(newAddress.getPhoneNumber());
-        existing.setDialCode(newAddress.getDialCode());
-        existing.setCountry(newAddress.getCountry());
-        existing.setPostalCode(newAddress.getPostalCode());
-        existing.setCity(newAddress.getCity());
-        return repository.save(existing);
-    }
-
-    @Override
-    public void delete(UUID id) {
-        repository.deleteById(id);
-    }
 }
