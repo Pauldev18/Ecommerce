@@ -71,8 +71,7 @@ public class CardServiceImpl implements CardService {
             dto.setProductName(p.getName());
             dto.setUnitPrice(p.getSalePrice());
             dto.setQuantity(i.getQuantity());
-            dto.setAttributes(attrs);
-            dto.setGallery(gallery);
+
 
             return dto;
         }).collect(Collectors.toList());
@@ -130,33 +129,40 @@ public class CardServiceImpl implements CardService {
             entityManager.refresh(cart);
         }
 
-
         UUID prodId = UUID.fromString(request.getProductId());
         Product product = productRepository.findById(prodId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product ID"));
 
+        // Tìm item đã có product đó (giả sử không có attributes phân biệt)
         Optional<CardItem> existing = cart.getItems().stream()
                 .filter(i -> i.getProduct().getId().equals(prodId))
                 .findFirst();
 
         if (existing.isPresent()) {
-             CardItem item = existing.get();
+            // Cộng dồn số lượng
+            CardItem item = existing.get();
             item.setQuantity(item.getQuantity() + request.getQuantity());
             entityManager.merge(item);
         } else {
-
             CardItem item = new CardItem();
             item.setCard(cart);
             item.setProduct(product);
             item.setQuantity(request.getQuantity());
-            entityManager.merge(item);
+
+            if (cart.getItems() == null) {
+                cart.setItems(new ArrayList<>());
+            }
             cart.getItems().add(item);
+
+            entityManager.persist(item);
+            entityManager.merge(cart);
         }
 
-
         entityManager.flush();
+
         return mapToDTO(cart);
     }
+
 
 
 
