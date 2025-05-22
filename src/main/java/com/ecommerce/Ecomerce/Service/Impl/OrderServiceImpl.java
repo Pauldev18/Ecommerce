@@ -3,10 +3,7 @@ package com.ecommerce.Ecomerce.Service.Impl;
 import com.ecommerce.Ecomerce.Dto.OrderItemDTO;
 import com.ecommerce.Ecomerce.Dto.OrderRequestDTO;
 import com.ecommerce.Ecomerce.Dto.OrderResponseDTO;
-import com.ecommerce.Ecomerce.Entity.Customer;
-import com.ecommerce.Ecomerce.Entity.Order;
-import com.ecommerce.Ecomerce.Entity.OrderItem;
-import com.ecommerce.Ecomerce.Entity.Product;
+import com.ecommerce.Ecomerce.Entity.*;
 import com.ecommerce.Ecomerce.Repository.*;
 import com.ecommerce.Ecomerce.Service.OrderService;
 import jakarta.transaction.Transactional;
@@ -26,23 +23,28 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
 
+    private final CardItemRepository cardItemRepository;
+
+
     public OrderServiceImpl(OrderRepository orderRepository,
                             OrderItemRepository orderItemRepository,
                             CouponRepository couponRepository,
                             OrderStatusRepository statusRepository,
                             CustomerRepository customerRepository,
-                            ProductRepository productRepository) {
+                            ProductRepository productRepository,
+                            CardItemRepository cardItemRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.couponRepository = couponRepository;
         this.statusRepository = statusRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
+        this.cardItemRepository = cardItemRepository;
     }
 
     private OrderResponseDTO mapToDTO(Order order) {
         List<OrderItemDTO> items = order.getOrderItems().stream()
-                .map(i -> new OrderItemDTO(i.getProduct().getId(), i.getPrice(), i.getQuantity()))
+                .map(i -> new OrderItemDTO(i.getProduct().getId(), i.getPrice(), i.getQuantity(), i.getProduct().getGalleries().get(0).getImage()))
                 .collect(Collectors.toList());
         return new OrderResponseDTO(
                 order.getId(),
@@ -110,6 +112,9 @@ public class OrderServiceImpl implements OrderService {
             return orderItemRepository.save(item);
         }).collect(Collectors.toList());
         saved.setOrderItems(items);
+        List<CardItem> cartItems = cardItemRepository.findByCardCustomerId(request.getCustomerId());
+        cardItemRepository.deleteAll(cartItems);
+
         return mapToDTO(saved);
     }
 

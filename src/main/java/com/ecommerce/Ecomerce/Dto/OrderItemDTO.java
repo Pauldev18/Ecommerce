@@ -13,4 +13,5 @@ public class OrderItemDTO {
     private UUID productId;
     private Double price;
     private Integer quantity;
+    private String image;
 }
