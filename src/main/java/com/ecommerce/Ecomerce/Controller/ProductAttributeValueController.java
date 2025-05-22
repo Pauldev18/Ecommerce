@@ -1,6 +1,7 @@
 package com.ecommerce.Ecomerce.Controller;
 
 import com.ecommerce.Ecomerce.Dto.ProductAttributeValueReponse;
+import com.ecommerce.Ecomerce.Entity.Product;
 import com.ecommerce.Ecomerce.Entity.ProductAttributeValue;
 import com.ecommerce.Ecomerce.Service.ProductAttributeValueService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +21,26 @@ public class ProductAttributeValueController {
     private ProductAttributeValueReponse toDTO(ProductAttributeValue pav) {
         ProductAttributeValueReponse dto = new ProductAttributeValueReponse();
         dto.setId(pav.getId());
-        dto.setProductAttributeId(pav.getProductAttribute().getId());
-        dto.setProductAttributeName(pav.getProductAttribute().getProduct().getName());
 
-        dto.setAttributeValueId(pav.getAttributeValue().getId());
-        dto.setAttributeValueName(pav.getAttributeValue().getValue());
+        if (pav.getProductAttribute() != null) {
+            dto.setProductAttributeId(pav.getProductAttribute().getId());
+
+            Product product = pav.getProductAttribute().getProduct();
+            if (product != null) {
+                dto.setProductAttributeName(product.getName());
+            } else {
+                dto.setProductAttributeName(null);
+            }
+        }
+
+        if (pav.getAttributeValue() != null) {
+            dto.setAttributeValueId(pav.getAttributeValue().getId());
+            dto.setAttributeValueName(pav.getAttributeValue().getValue());
+        }
+
         return dto;
     }
+
 
     @GetMapping
     public List<ProductAttributeValueReponse> getAll() {
