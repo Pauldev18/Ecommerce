@@ -71,7 +71,8 @@ public class CardServiceImpl implements CardService {
             dto.setProductName(p.getName());
             dto.setUnitPrice(p.getSalePrice());
             dto.setQuantity(i.getQuantity());
-
+            dto.setAttributes(attrs);
+            dto.setGallery(gallery);
 
             return dto;
         }).collect(Collectors.toList());
