@@ -12,7 +12,5 @@ import java.util.UUID;
 
 public interface CardRepository extends JpaRepository<Card, UUID> {
     Optional<Card> findByCustomerId(UUID customerId);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT c FROM Card c WHERE c.customer.id = :customerId")
-    Optional<Card> findByCustomerIdForUpdate(@Param("customerId") UUID customerId);
+
 }

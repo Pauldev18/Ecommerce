@@ -91,10 +91,16 @@ public class CardServiceImpl implements CardService {
         return cartRepository.findByCustomerId(customerId)
                 .orElseGet(() -> cartRepository.save(new Card(UUID.randomUUID(), customer, new ArrayList<>())));
     }
+    private Card getCart(UUID customerId) {
+        return cartRepository.findByCustomerId(customerId).orElse(null);
+    }
 
     @Override
     public CartResponseDTO getCartByCustomer(UUID customerId) {
-        Card cart = getOrCreateCart(customerId);
+        Card cart = getCart(customerId);
+        if (cart == null) {
+            return null;
+        }
         return mapToDTO(cart);
     }
 
