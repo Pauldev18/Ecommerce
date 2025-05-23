@@ -1,5 +1,6 @@
 package com.ecommerce.Ecomerce.Controller;
 
+import com.ecommerce.Ecomerce.Dto.OrderDatesUpdateDTO;
 import com.ecommerce.Ecomerce.Dto.OrderRequestDTO;
 import com.ecommerce.Ecomerce.Dto.OrderResponseDTO;
 import com.ecommerce.Ecomerce.Entity.Order;
@@ -54,6 +55,19 @@ public class OrderController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable String id) {
         orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{orderId}/status/{statusId}")
+    public ResponseEntity<Void> updateOrderStatus(@PathVariable String orderId,
+                                                  @PathVariable UUID statusId) {
+        orderService.updateOrderStatus(orderId, statusId);
+        return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{orderId}/dates")
+    public ResponseEntity<Void> updateOrderDates(
+            @PathVariable String orderId,
+            @RequestBody OrderDatesUpdateDTO datesDto) {
+        orderService.updateOrderDates(orderId, datesDto);
         return ResponseEntity.noContent().build();
     }
 }

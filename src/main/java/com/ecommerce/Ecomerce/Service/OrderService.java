@@ -1,5 +1,6 @@
 package com.ecommerce.Ecomerce.Service;
 
+import com.ecommerce.Ecomerce.Dto.OrderDatesUpdateDTO;
 import com.ecommerce.Ecomerce.Dto.OrderRequestDTO;
 import com.ecommerce.Ecomerce.Dto.OrderResponseDTO;
 import com.ecommerce.Ecomerce.Entity.Order;
@@ -15,4 +16,6 @@ public interface OrderService {
     OrderResponseDTO createOrder(OrderRequestDTO request);
     OrderResponseDTO updateOrder(String id, OrderRequestDTO request);
     void deleteOrder(String id);
+     void updateOrderStatus(String orderId, UUID statusId);
+    void updateOrderDates(String orderId, OrderDatesUpdateDTO dto);
 }

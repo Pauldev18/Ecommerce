@@ -1,11 +1,13 @@
 package com.ecommerce.Ecomerce.Service.Impl;
 
+import com.ecommerce.Ecomerce.Dto.OrderDatesUpdateDTO;
 import com.ecommerce.Ecomerce.Dto.OrderItemDTO;
 import com.ecommerce.Ecomerce.Dto.OrderRequestDTO;
 import com.ecommerce.Ecomerce.Dto.OrderResponseDTO;
 import com.ecommerce.Ecomerce.Entity.*;
 import com.ecommerce.Ecomerce.Repository.*;
 import com.ecommerce.Ecomerce.Service.OrderService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -73,14 +75,45 @@ public class OrderServiceImpl implements OrderService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+    @Override
+    @Transactional
+    public void updateOrderDates(String orderId, OrderDatesUpdateDTO dto) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn hàng với id: " + orderId));
 
+        if (dto.getOrderApprovedAt() != null) {
+            order.setOrderApprovedAt(dto.getOrderApprovedAt());
+        }
+        if (dto.getOrderDeliveredCarrierDate() != null) {
+            order.setOrderDeliveredCarrierDate(dto.getOrderDeliveredCarrierDate());
+        }
+        if (dto.getOrderDeliveredCustomerDate() != null) {
+            order.setOrderDeliveredCustomerDate(dto.getOrderDeliveredCustomerDate());
+        }
+
+        orderRepository.save(order);
+    }
     @Override
     public OrderResponseDTO findById(String id) {
         return orderRepository.findById(id)
                 .map(this::mapToDTO)
                 .orElseThrow(() -> new NoSuchElementException("Order not found"));
     }
+    @Override
+    @Transactional
+    public void updateOrderStatus(String orderId, UUID statusId) {
 
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn hàng với id: " + orderId));
+
+
+        OrderStatus newStatus = statusRepository.findById(statusId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy trạng thái với id: " + statusId));
+
+
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+    }
     @Override
     @Transactional
     public OrderResponseDTO createOrder(OrderRequestDTO request) {
