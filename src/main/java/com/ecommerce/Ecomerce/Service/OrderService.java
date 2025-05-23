@@ -12,10 +12,13 @@ import java.util.UUID;
 public interface OrderService {
     List<OrderResponseDTO> findAll();
     List<OrderResponseDTO> findByCustomerId(UUID customerId);
+
+
     OrderResponseDTO findById(String id);
     OrderResponseDTO createOrder(OrderRequestDTO request);
-    OrderResponseDTO updateOrder(String id, OrderRequestDTO request);
+
     void deleteOrder(String id);
      void updateOrderStatus(String orderId, UUID statusId);
     void updateOrderDates(String orderId, OrderDatesUpdateDTO dto);
+    Double applyVoucher(String couponCode, Double orderTotal);
 }

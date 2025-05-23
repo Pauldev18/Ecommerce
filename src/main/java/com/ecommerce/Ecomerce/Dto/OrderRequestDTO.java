@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class OrderRequestDTO {
     private UUID customerId;
-    private UUID couponId;
+    private String couponCode;
     private UUID statusId;
     private Date orderApprovedAt;
     private Date orderDeliveredCarrierDate;

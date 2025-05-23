@@ -19,4 +19,5 @@ public class OrderResponseDTO {
     private Date orderDeliveredCarrierDate;
     private Date orderDeliveredCustomerDate;
     private List<OrderItemDTO> items;
+    private Double totalPrice;
 }

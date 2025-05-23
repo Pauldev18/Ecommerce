@@ -1,8 +1,7 @@
 package com.ecommerce.Ecomerce.Controller;
 
-import com.ecommerce.Ecomerce.Dto.OrderDatesUpdateDTO;
-import com.ecommerce.Ecomerce.Dto.OrderRequestDTO;
-import com.ecommerce.Ecomerce.Dto.OrderResponseDTO;
+import com.ecommerce.Ecomerce.Dto.*;
+import com.ecommerce.Ecomerce.Entity.Coupon;
 import com.ecommerce.Ecomerce.Entity.Order;
 import com.ecommerce.Ecomerce.Service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +44,6 @@ public class OrderController {
                 .body(created);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> updateOrder(@PathVariable String id,
-                                                        @RequestBody OrderRequestDTO request) {
-        OrderResponseDTO updated = orderService.updateOrder(id, request);
-        return ResponseEntity.ok(updated);
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable String id) {
@@ -70,4 +63,16 @@ public class OrderController {
         orderService.updateOrderDates(orderId, datesDto);
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/applyVoucher")
+    public ResponseEntity<ApplyVoucherResponse> applyVoucher(@RequestBody ApplyVoucherRequest request) {
+        try {
+            double discountAmount = orderService.applyVoucher(request.getCouponCode(), request.getOrderTotal());
+            return ResponseEntity.ok(new ApplyVoucherResponse(true, "Mã giảm giá hợp lệ", discountAmount));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApplyVoucherResponse(false, e.getMessage(), 0.0));
+        }
+    }
+
+
+
 }

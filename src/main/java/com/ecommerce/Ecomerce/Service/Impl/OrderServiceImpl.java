@@ -9,7 +9,6 @@ import com.ecommerce.Ecomerce.Repository.*;
 import com.ecommerce.Ecomerce.Service.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -46,8 +45,32 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderResponseDTO mapToDTO(Order order) {
         List<OrderItemDTO> items = order.getOrderItems().stream()
-                .map(i -> new OrderItemDTO(i.getProduct().getId(), i.getPrice(), i.getQuantity(), i.getProduct().getGalleries().get(0).getImage()))
+                .map(i -> new OrderItemDTO(
+                        i.getProduct().getId(),
+                        i.getPrice(),
+                        i.getQuantity(),
+                        i.getProduct().getGalleries().get(0).getImage()))
                 .collect(Collectors.toList());
+
+        double total = items.stream()
+                .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                .sum();
+
+
+        if (order.getCoupon() != null) {
+            Coupon coupon = order.getCoupon();
+            if ("percent".equalsIgnoreCase(coupon.getDiscountType())) {
+                total -= total * (coupon.getDiscountValue() / 100);
+            } else if ("fixed".equalsIgnoreCase(coupon.getDiscountType())) {
+                total -= coupon.getDiscountValue();
+            }
+
+
+            if (total < 0) {
+                total = 0;
+            }
+        }
+
         return new OrderResponseDTO(
                 order.getId(),
                 order.getCustomer().getId(),
@@ -58,9 +81,11 @@ public class OrderServiceImpl implements OrderService {
                 order.getOrderApprovedAt(),
                 order.getOrderDeliveredCarrierDate(),
                 order.getOrderDeliveredCustomerDate(),
-                items
+                items,
+                total
         );
     }
+
 
     @Override
     public List<OrderResponseDTO> findAll() {
@@ -93,6 +118,40 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.save(order);
     }
+
+    @Override
+    public Double applyVoucher(String couponCode, Double orderTotal) {
+        Coupon coupon = couponRepository.findByCode(couponCode)
+                .orElseThrow(() -> new IllegalArgumentException("Mã giảm giá không tồn tại"));
+
+        Date now = new Date();
+        if (coupon.getCouponStartDate() != null && now.before(coupon.getCouponStartDate())) {
+            throw new IllegalArgumentException("Mã giảm giá chưa bắt đầu.");
+        }
+        if (coupon.getCouponEndDate() != null && now.after(coupon.getCouponEndDate())) {
+            throw new IllegalArgumentException("Mã giảm giá đã hết hạn.");
+        }
+        if (coupon.getMaxUsage() != null && coupon.getTimesUsed() >= coupon.getMaxUsage()) {
+            throw new IllegalArgumentException("Mã giảm giá đã được sử dụng tối đa.");
+        }
+        if (coupon.getOrderAmountLimit() != null && orderTotal < coupon.getOrderAmountLimit()) {
+            throw new IllegalArgumentException("Tổng đơn hàng chưa đủ điều kiện áp dụng mã giảm giá.");
+        }
+
+        double discountAmount = 0;
+        if ("percent".equalsIgnoreCase(coupon.getDiscountType())) {
+            discountAmount = orderTotal * (coupon.getDiscountValue() / 100);
+        } else if ("fixed".equalsIgnoreCase(coupon.getDiscountType())) {
+            discountAmount = coupon.getDiscountValue();
+        }
+
+        discountAmount = Math.min(discountAmount, orderTotal);
+        return discountAmount;
+    }
+
+
+
+
     @Override
     public OrderResponseDTO findById(String id) {
         return orderRepository.findById(id)
@@ -119,19 +178,31 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO createOrder(OrderRequestDTO request) {
         Order order = new Order();
         order.setId(UUID.randomUUID().toString());
+
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid customer ID"));
         order.setCustomer(customer);
-        if (request.getCouponId() != null) {
-            order.setCoupon(couponRepository.findById(request.getCouponId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid coupon ID")));
+
+
+        if (request.getCouponCode() != null && !request.getCouponCode().isEmpty()) {
+            Coupon coupon = couponRepository.findByCode(request.getCouponCode())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid coupon code"));
+
+
+            Integer usedTimes = coupon.getTimesUsed() != null ? coupon.getTimesUsed() : 0;
+            coupon.setTimesUsed(usedTimes + 1);
+            couponRepository.save(coupon);
+
+            order.setCoupon(coupon);
         }
+
         order.setStatus(statusRepository.findById(request.getStatusId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid status ID")));
         order.setOrderApprovedAt(request.getOrderApprovedAt());
         order.setOrderDeliveredCarrierDate(request.getOrderDeliveredCarrierDate());
         order.setOrderDeliveredCustomerDate(request.getOrderDeliveredCustomerDate());
         order.setCreatedAt(new Date());
+
         Order saved = orderRepository.save(order);
 
         List<OrderItem> items = request.getItems().stream().map(dto -> {
@@ -144,46 +215,17 @@ public class OrderServiceImpl implements OrderService {
             item.setQuantity(dto.getQuantity());
             return orderItemRepository.save(item);
         }).collect(Collectors.toList());
+
         saved.setOrderItems(items);
+
         List<CardItem> cartItems = cardItemRepository.findByCardCustomerId(request.getCustomerId());
         cardItemRepository.deleteAll(cartItems);
 
         return mapToDTO(saved);
     }
 
-    @Override
-    @Transactional
-    public OrderResponseDTO updateOrder(String id, OrderRequestDTO request) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Order not found"));
-        // update fields similar to create
-        if (request.getCouponId() != null) {
-            order.setCoupon(couponRepository.findById(request.getCouponId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid coupon ID")));
-        } else {
-            order.setCoupon(null);
-        }
-        order.setStatus(statusRepository.findById(request.getStatusId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid status ID")));
-        order.setOrderApprovedAt(request.getOrderApprovedAt());
-        order.setOrderDeliveredCarrierDate(request.getOrderDeliveredCarrierDate());
-        order.setOrderDeliveredCustomerDate(request.getOrderDeliveredCustomerDate());
-        // clear and save items
-        orderItemRepository.deleteByOrderId(id);
-        List<OrderItem> items = request.getItems().stream().map(dto -> {
-            OrderItem item = new OrderItem();
-            item.setOrder(order);
-            Product product = productRepository.findById(dto.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid product ID"));
-            item.setProduct(product);
-            item.setPrice(dto.getPrice());
-            item.setQuantity(dto.getQuantity());
-            return orderItemRepository.save(item);
-        }).collect(Collectors.toList());
-        order.setOrderItems(items);
-        Order updated = orderRepository.save(order);
-        return mapToDTO(updated);
-    }
+
+
 
     @Override
     public void deleteOrder(String id) {
