@@ -1,9 +1,6 @@
 package com.ecommerce.Ecomerce.Controller;
 
-import com.ecommerce.Ecomerce.Dto.ProductAttributeDTO;
-import com.ecommerce.Ecomerce.Dto.ProductAttributeDTO2;
-import com.ecommerce.Ecomerce.Dto.ProductDTO;
-import com.ecommerce.Ecomerce.Dto.ProductGalleryDTO;
+import com.ecommerce.Ecomerce.Dto.*;
 import com.ecommerce.Ecomerce.Entity.Product;
 import com.ecommerce.Ecomerce.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +68,25 @@ public class ProductController {
     public ResponseEntity<ProductDTO> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(ProductController.toDTO(productService.getProductById(id)));
     }
-
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Product>> getByCategory(@PathVariable UUID categoryId) {
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        return ResponseEntity.ok(products);
+    }
+    @GetMapping("/trending/7days")
+    public ResponseEntity<List<BestSellerProjection>> trending7Days(
+            @RequestParam(defaultValue = "done") String status,
+            @RequestParam(defaultValue = "10")   int top) {
+        List<BestSellerProjection> list =
+                productService.getTrendingLast7Days(status, top);
+        return ResponseEntity.ok(list);
+    }
+    @GetMapping("/bestsellers")
+    public ResponseEntity<List<BestSellerProjection>> getBestSellers(
+            @RequestParam(defaultValue = "done") String status) {
+        List<BestSellerProjection> list = productService.getBestSellers(status);
+        return ResponseEntity.ok(list);
+    }
     @PostMapping
     public ResponseEntity<Product> create(@RequestBody Product product) {
         return ResponseEntity.ok(productService.createProduct(product));
