@@ -14,7 +14,7 @@ public interface ProductService {
     Product updateProduct(UUID id, Product product);
     void deleteProduct(UUID id);
     List<Product> getProductsByCategory(UUID categoryId);
-    List<ProductDTO> getBestSellers(String statusName);
-    List<ProductDTO> getTrendingLast7Days(String statusName, int topN);
+    List<Product> getBestSellerProducts(String statusName);
+    List<Product> getTrendingProductsLast7Days(String statusName, int topN);
 
 }

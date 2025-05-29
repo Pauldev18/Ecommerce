@@ -73,27 +73,33 @@ public class ProductController {
     public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable UUID categoryId) {
         List<Product> products = productService.getProductsByCategory(categoryId);
 
-        List<ProductDTO> dtos = products.stream().map(p -> {
-            ProductDTO dto = new ProductDTO();
-            BeanUtils.copyProperties(p, dto);
-            return dto;
-        }).collect(Collectors.toList());
+        List<ProductDTO> dtos = products.stream()
+                .map(ProductController::toDTO)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
     }
+
     @GetMapping("/trending/7days")
     public ResponseEntity<List<ProductDTO>> trending7Days(
             @RequestParam(defaultValue = "done") String status,
             @RequestParam(defaultValue = "10")   int top) {
-        List<ProductDTO> list =
-                productService.getTrendingLast7Days(status, top);
-        return ResponseEntity.ok(list);
+
+        List<Product> products =
+                productService.getTrendingProductsLast7Days(status, top);
+        List<ProductDTO> dtos = products.stream()
+                .map(ProductController::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     @GetMapping("/bestsellers")
     public ResponseEntity<List<ProductDTO>> getBestSellers(
             @RequestParam(defaultValue = "done") String status) {
-        List<ProductDTO> list = productService.getBestSellers(status);
-        return ResponseEntity.ok(list);
+        List<Product> products = productService.getBestSellerProducts(status);
+        List<ProductDTO> dtos = products.stream()
+                .map(ProductController::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     @PostMapping
     public ResponseEntity<Product> create(@RequestBody Product product) {

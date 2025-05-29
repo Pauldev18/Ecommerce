@@ -40,27 +40,19 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAllByCategoryId(categoryId);
     }
     @Override
-    public List<ProductDTO> getTrendingLast7Days(String statusName, int topN) {
+    public List<Product> getTrendingProductsLast7Days(String statusName, int topN) {
+
         Date fromDate = Date.from(
                 LocalDate.now()
                         .minusDays(7)
                         .atStartOfDay(ZoneId.systemDefault())
                         .toInstant()
         );
-
         Pageable page = PageRequest.of(0, topN);
-        List<BestSellerProjection> list =
-                orderItemRepository.findTrending(statusName, fromDate, page);
-
-
-        return list.stream().map(proj -> {
-            Product p = proj.getProduct();
-            ProductDTO dto = new ProductDTO();
-
-            BeanUtils.copyProperties(p, dto);
-
-            return dto;
-        }).collect(Collectors.toList());
+        return orderItemRepository.findTrending(statusName, fromDate, page)
+                .stream()
+                .map(BestSellerProjection::getProduct)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -70,20 +62,13 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
     @Override
-    public List<ProductDTO> getBestSellers(String statusName) {
-        List<BestSellerProjection> list =
-                orderItemRepository.findBestSellersByStatus(statusName);
-
-
-        return list.stream().map(proj -> {
-            Product p = proj.getProduct();
-            ProductDTO dto = new ProductDTO();
-
-            BeanUtils.copyProperties(p, dto);
-
-            return dto;
-        }).collect(Collectors.toList());
+    public List<Product> getBestSellerProducts(String statusName) {
+        return orderItemRepository.findBestSellersByStatus(statusName)
+                .stream()
+                .map(BestSellerProjection::getProduct)
+                .collect(Collectors.toList());
     }
+
     @Override
     public Product updateProduct(UUID id, Product updatedProduct) {
         Product existing = getProductById(id);
