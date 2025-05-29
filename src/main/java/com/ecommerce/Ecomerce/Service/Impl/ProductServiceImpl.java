@@ -62,6 +62,11 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
     @Override
+    public List<Product> getNewProducts(int topN) {
+        return productRepository
+                .findAllByOrderByCreatedAtDesc(PageRequest.of(0, topN));
+    }
+    @Override
     public List<Product> getBestSellerProducts(String statusName) {
         return orderItemRepository.findBestSellersByStatus(statusName)
                 .stream()

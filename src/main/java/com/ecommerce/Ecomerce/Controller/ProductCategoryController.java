@@ -25,6 +25,9 @@ public class ProductCategoryController {
         dto.setId(pc.getId());
         dto.setProductId(pc.getProduct().getId());
         dto.setCategoryId(pc.getCategory().getId());
+        dto.setProductName(pc.getProduct().getName());
+        dto.setCategoryName(pc.getCategory().getCategoryName());
+
         return dto;
     }
 

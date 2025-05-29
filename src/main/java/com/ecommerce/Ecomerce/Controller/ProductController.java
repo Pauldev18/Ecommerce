@@ -79,6 +79,15 @@ public class ProductController {
 
         return ResponseEntity.ok(dtos);
     }
+    @GetMapping("/new")
+    public ResponseEntity<List<ProductDTO>> getNewProducts(
+            @RequestParam(defaultValue = "10") int top) {
+        List<Product> list = productService.getNewProducts(top);
+        List<ProductDTO> dtos = list.stream()
+                .map(ProductController::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
 
     @GetMapping("/trending/7days")
     public ResponseEntity<List<ProductDTO>> trending7Days(

@@ -1,6 +1,7 @@
 package com.ecommerce.Ecomerce.Repository;
 
 import com.ecommerce.Ecomerce.Entity.Product;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,4 +16,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
        WHERE pc.category.id = :categoryId
     """)
     List<Product> findAllByCategoryId(@Param("categoryId") UUID categoryId);
+    List<Product> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

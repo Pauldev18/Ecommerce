@@ -16,5 +16,6 @@ public interface ProductService {
     List<Product> getProductsByCategory(UUID categoryId);
     List<Product> getBestSellerProducts(String statusName);
     List<Product> getTrendingProductsLast7Days(String statusName, int topN);
+    List<Product> getNewProducts(int topN);
 
 }
