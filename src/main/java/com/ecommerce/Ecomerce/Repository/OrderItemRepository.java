@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,22 +22,18 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
         ORDER BY SUM(oi.quantity) DESC
     """)
     List<BestSellerProjection> findBestSellersByStatus(@Param("statusName") String statusName);
-    @Query(value = """
-        SELECT 
-            oi.product_id      AS product,
-            SUM(oi.quantity)   AS totalQuantity
-        FROM order_items oi
-        JOIN orders o
-          ON oi.order_id = o.id
-        JOIN order_statuses s
-          ON o.order_status_id = s.id
-        WHERE s.status_name = :statusName
-          AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        GROUP BY oi.product_id
-        ORDER BY SUM(oi.quantity) DESC
-        """, nativeQuery = true)
-    List<BestSellerProjection> findTrendingLast7Days(
+    @Query("""
+        SELECT oi.product       AS product,
+               SUM(oi.quantity) AS totalQuantity
+        FROM   OrderItem oi
+        WHERE  oi.order.status.name = :statusName
+          AND  oi.order.createdAt >= :fromDate
+        GROUP  BY oi.product
+        ORDER  BY SUM(oi.quantity) DESC
+    """)
+    List<BestSellerProjection> findTrending(
             @Param("statusName") String statusName,
-            Pageable pageable
+            @Param("fromDate") Date fromDate,
+            Pageable             pageable
     );
 }

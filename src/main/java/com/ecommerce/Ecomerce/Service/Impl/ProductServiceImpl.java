@@ -1,16 +1,21 @@
 package com.ecommerce.Ecomerce.Service.Impl;
 
 import com.ecommerce.Ecomerce.Dto.BestSellerProjection;
+import com.ecommerce.Ecomerce.Dto.ProductDTO;
 import com.ecommerce.Ecomerce.Entity.Product;
 import com.ecommerce.Ecomerce.Repository.OrderItemRepository;
 import com.ecommerce.Ecomerce.Repository.ProductRepository;
 import com.ecommerce.Ecomerce.Service.ProductService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -35,10 +40,29 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAllByCategoryId(categoryId);
     }
     @Override
-    public List<BestSellerProjection> getTrendingLast7Days(String statusName, int topN) {
+    public List<ProductDTO> getTrendingLast7Days(String statusName, int topN) {
+        Date fromDate = Date.from(
+                LocalDate.now()
+                        .minusDays(7)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
+
         Pageable page = PageRequest.of(0, topN);
-        return orderItemRepository.findTrendingLast7Days(statusName, page);
+        List<BestSellerProjection> list =
+                orderItemRepository.findTrending(statusName, fromDate, page);
+
+
+        return list.stream().map(proj -> {
+            Product p = proj.getProduct();
+            ProductDTO dto = new ProductDTO();
+
+            BeanUtils.copyProperties(p, dto);
+
+            return dto;
+        }).collect(Collectors.toList());
     }
+
     @Override
     public Product createProduct(Product product) {
         product.setCreatedAt(new Date());
@@ -46,8 +70,19 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
     @Override
-    public List<BestSellerProjection> getBestSellers(String statusName) {
-        return orderItemRepository.findBestSellersByStatus(statusName);
+    public List<ProductDTO> getBestSellers(String statusName) {
+        List<BestSellerProjection> list =
+                orderItemRepository.findBestSellersByStatus(statusName);
+
+
+        return list.stream().map(proj -> {
+            Product p = proj.getProduct();
+            ProductDTO dto = new ProductDTO();
+
+            BeanUtils.copyProperties(p, dto);
+
+            return dto;
+        }).collect(Collectors.toList());
     }
     @Override
     public Product updateProduct(UUID id, Product updatedProduct) {

@@ -1,12 +1,18 @@
 package com.ecommerce.Ecomerce.Controller;
 
+import com.ecommerce.Ecomerce.Dto.ProductCategoryDTO;
+import com.ecommerce.Ecomerce.Entity.Category;
+import com.ecommerce.Ecomerce.Entity.Product;
 import com.ecommerce.Ecomerce.Entity.ProductCategory;
 import com.ecommerce.Ecomerce.Service.ProductCategoryService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/api/product-categories")
@@ -14,25 +20,52 @@ public class ProductCategoryController {
 
     @Autowired
     private ProductCategoryService productCategoryService;
+    private ProductCategoryDTO toDto(ProductCategory pc) {
+        ProductCategoryDTO dto = new ProductCategoryDTO();
+        dto.setId(pc.getId());
+        dto.setProductId(pc.getProduct().getId());
+        dto.setCategoryId(pc.getCategory().getId());
+        return dto;
+    }
 
     @GetMapping
-    public List<ProductCategory> getAll() {
-        return productCategoryService.getAll();
+    public List<ProductCategoryDTO> getAll() {
+        return productCategoryService.getAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductCategory> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productCategoryService.getById(id));
+    public ResponseEntity<ProductCategoryDTO> getById(@PathVariable UUID id) {
+        ProductCategory pc = productCategoryService.getById(id);
+        return ResponseEntity.ok(toDto(pc));
     }
 
     @PostMapping
-    public ResponseEntity<ProductCategory> create(@RequestBody ProductCategory productCategory) {
-        return ResponseEntity.ok(productCategoryService.create(productCategory));
+    public ResponseEntity<ProductCategoryDTO> create(@RequestBody ProductCategoryDTO dto) {
+        ProductCategory pc = new ProductCategory();
+        pc.setProduct(new Product());
+        pc.getProduct().setId(dto.getProductId());
+        pc.setCategory(new Category());
+        pc.getCategory().setId(dto.getCategoryId());
+
+        ProductCategory created = productCategoryService.create(pc);
+        return ResponseEntity.ok(toDto(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductCategory> update(@PathVariable UUID id, @RequestBody ProductCategory productCategory) {
-        return ResponseEntity.ok(productCategoryService.update(id, productCategory));
+    public ResponseEntity<ProductCategoryDTO> update(
+            @PathVariable UUID id,
+            @RequestBody ProductCategoryDTO dto) {
+
+        ProductCategory pc = new ProductCategory();
+        pc.setProduct(new Product());
+        pc.getProduct().setId(dto.getProductId());
+        pc.setCategory(new Category());
+        pc.getCategory().setId(dto.getCategoryId());
+
+        ProductCategory updated = productCategoryService.update(id, pc);
+        return ResponseEntity.ok(toDto(updated));
     }
 
     @DeleteMapping("/{id}")

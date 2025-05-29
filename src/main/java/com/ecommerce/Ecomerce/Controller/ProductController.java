@@ -3,6 +3,7 @@ package com.ecommerce.Ecomerce.Controller;
 import com.ecommerce.Ecomerce.Dto.*;
 import com.ecommerce.Ecomerce.Entity.Product;
 import com.ecommerce.Ecomerce.Service.ProductService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -69,22 +70,29 @@ public class ProductController {
         return ResponseEntity.ok(ProductController.toDTO(productService.getProductById(id)));
     }
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<Product>> getByCategory(@PathVariable UUID categoryId) {
+    public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable UUID categoryId) {
         List<Product> products = productService.getProductsByCategory(categoryId);
-        return ResponseEntity.ok(products);
+
+        List<ProductDTO> dtos = products.stream().map(p -> {
+            ProductDTO dto = new ProductDTO();
+            BeanUtils.copyProperties(p, dto);
+            return dto;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
     @GetMapping("/trending/7days")
-    public ResponseEntity<List<BestSellerProjection>> trending7Days(
+    public ResponseEntity<List<ProductDTO>> trending7Days(
             @RequestParam(defaultValue = "done") String status,
             @RequestParam(defaultValue = "10")   int top) {
-        List<BestSellerProjection> list =
+        List<ProductDTO> list =
                 productService.getTrendingLast7Days(status, top);
         return ResponseEntity.ok(list);
     }
     @GetMapping("/bestsellers")
-    public ResponseEntity<List<BestSellerProjection>> getBestSellers(
+    public ResponseEntity<List<ProductDTO>> getBestSellers(
             @RequestParam(defaultValue = "done") String status) {
-        List<BestSellerProjection> list = productService.getBestSellers(status);
+        List<ProductDTO> list = productService.getBestSellers(status);
         return ResponseEntity.ok(list);
     }
     @PostMapping
