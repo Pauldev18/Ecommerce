@@ -1,9 +1,11 @@
 package com.ecommerce.Ecomerce.Dto;
 
+import com.ecommerce.Ecomerce.Entity.AttributeValue;
 import com.ecommerce.Ecomerce.Entity.ProductAttribute;
 import lombok.Data;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,12 +36,16 @@ public class ProductAttributeDTO {
         UUID attrId = entity.getAttribute() != null ? entity.getAttribute().getId() : null;
         String attrName = entity.getAttribute() != null ? entity.getAttribute().getName() : null;
 
-        List<AttributeValueDTO> attributeValues = entity.getValues() != null
+        List<AttributeValueDTO> attributeValues = (entity.getValues() != null)
                 ? entity.getValues().stream()
-                .map(pav -> AttributeValueDTO.fromEntity(pav.getAttributeValue()))
+
+                .map(pav -> pav.getAttributeValue())
+
+                .sorted(Comparator.comparing(AttributeValue::getValue))
+
+                .map(AttributeValueDTO::fromEntity)
                 .collect(Collectors.toList())
                 : Collections.emptyList();
-
 
         return new ProductAttributeDTO(
                 entity.getId(), prodId, prodName,
@@ -47,4 +53,5 @@ public class ProductAttributeDTO {
                 attributeValues
         );
     }
+
 }
